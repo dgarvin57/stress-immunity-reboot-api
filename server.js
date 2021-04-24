@@ -19,6 +19,6 @@ app.get("/", (req, res) =>
 // Start server
 app.listen(port, () =>
   console.log(
-    `stress-immunity-reboot-api listening on port ${port} || 3000 at ${currDate}`
+    `stress-immunity-reboot-api listening on port ${port} at ${currDate}`
   )
 )
