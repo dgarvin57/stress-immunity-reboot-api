@@ -10,7 +10,7 @@ const config = {
   accessTokenExpiresInMinutes: 30,
   refreshTokenExpiresInHours: 72,
   defaultRecordLimit: 50,
-  listPerPage: process.env.LIST_PER_PAGE || 10,
+  listPerPage: 10,
   db: {
     host: process.env.HOST,
     port: process.env.DB_PORT,
