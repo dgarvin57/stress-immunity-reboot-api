@@ -1,8 +1,7 @@
 const express = require("express")
 const app = express()
 const bodyParser = require("body-parser")
-const config = require("./config")
-const userRouter = require("./routes/user.route")
+const userRouter = require("./routes/auth-user.route")
 
 // v0.0 - Initial setup
 // *********************************************
@@ -17,7 +16,8 @@ app.use(
   })
 )
 
-app.use("/user", userRouter)
+// Routes
+require("./routes")(app)
 
 const currDate = new Date()
 const port = process.env.PORT !== undefined ? process.env.PORT : 3000
@@ -29,14 +29,9 @@ app.get(
     res.json({
       status: "ok",
       port: port,
-      message: "Hi Dan G",
+      message: "stress-immunity-reboot-api listening...",
     })
   //res.send(`Hello Dan3! at ${currDate} on port ${port}`)
-)
-
-// Database test route
-app.get("/dbtest", (req, res) =>
-  res.send(`Hello Dan3! at ${currDate} on port ${port}`)
 )
 
 /* Error handler middleware */
