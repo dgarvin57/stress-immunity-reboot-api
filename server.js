@@ -8,13 +8,17 @@ const config = require("./config")
 // 04/23/21: v0.0 - Initial commit
 // *********************************************
 
+const currDate = new Date()
+const port = process.env.PORT !== undefined ? process.env.PORT : 3000
+
 // Default route
-app.get("/", (req, res) => res.send(`Hello Dan3! at ${currDate}`))
+app.get("/", (req, res) =>
+  res.send(`Hello Dan3! at ${currDate} on port ${port}`)
+)
 
 // Start server
-const currDate = new Date()
-app.listen(process.env.PORT || 3000, () =>
+app.listen(port, () =>
   console.log(
-    `stress-immunity-reboot-api listening on port ${process.env.PORT} || 3000 at ${currDate}`
+    `stress-immunity-reboot-api listening on port ${port} || 3000 at ${currDate}`
   )
 )
