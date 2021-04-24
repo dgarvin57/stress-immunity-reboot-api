@@ -22,3 +22,7 @@ app.listen(port, () =>
     `stress-immunity-reboot-api listening on port ${port} at ${currDate}`
   )
 )
+
+module.exports = {
+  app,
+}
