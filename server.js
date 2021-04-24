@@ -2,6 +2,7 @@ const express = require("express")
 const app = express()
 const bodyParser = require("body-parser")
 const config = require("./config")
+const userRouter = require("./routes/user.route")
 
 // v0.0 - Initial setup
 // *********************************************
@@ -15,6 +16,8 @@ app.use(
     extended: true,
   })
 )
+
+app.use("/user", userRouter)
 
 const currDate = new Date()
 const port = process.env.PORT !== undefined ? process.env.PORT : 3000
@@ -35,6 +38,14 @@ app.get(
 app.get("/dbtest", (req, res) =>
   res.send(`Hello Dan3! at ${currDate} on port ${port}`)
 )
+
+/* Error handler middleware */
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500
+  console.error(err.message, err.stack)
+  res.status(statusCode).json({ message: err.message })
+  return
+})
 
 // Start server
 app.listen(port, () =>
