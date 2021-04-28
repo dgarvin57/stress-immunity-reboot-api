@@ -9,7 +9,12 @@ function emptyOrRows(rows) {
   return rows
 }
 
+function isNullOrEmpty(value) {
+  return value ? false : true
+}
+
 module.exports = {
   getOffset,
   emptyOrRows,
+  isNullOrEmpty,
 }

@@ -9,8 +9,7 @@ const config = {
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
   accessTokenExpiresInMinutes: 30,
   refreshTokenExpiresInHours: 72,
-  defaultRecordLimit: 50,
-  listPerPage: 50,
+  listPerPage: 10,
   db: {
     host: process.env.HOST,
     port: process.env.DB_PORT,

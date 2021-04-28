@@ -1,7 +1,8 @@
 const express = require("express")
 const app = express()
 const bodyParser = require("body-parser")
-const userRouter = require("./routes/auth-user.route")
+const authUserRouter = require("./routes/auth-user.route")
+const authLoginRouter = require("./routes/auth-login.route")
 
 // v0.0 - Initial setup
 // *********************************************
@@ -17,21 +18,19 @@ app.use(
 )
 
 // Routes
-require("./routes")(app)
+app.use("/user", authUserRouter)
+app.use("/login", authLoginRouter)
 
 const currDate = new Date()
 const port = process.env.PORT !== undefined ? process.env.PORT : 3000
 
 // Default route
-app.get(
-  "/",
-  (req, res) =>
-    res.json({
-      status: "ok",
-      port: port,
-      message: "stress-immunity-reboot-api listening...",
-    })
-  //res.send(`Hello Dan3! at ${currDate} on port ${port}`)
+app.get("/", (req, res) =>
+  res.json({
+    status: "ok",
+    port: port,
+    message: "stress-immunity-reboot-api listening...",
+  })
 )
 
 /* Error handler middleware */
