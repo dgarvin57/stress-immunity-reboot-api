@@ -50,7 +50,7 @@ Content-Type: application/json
 
 ###
 // Get one user by id
-GET {{domain}}/user/176
+GET {{domain}}/user/3
 
 ###
 // Delete one user by id

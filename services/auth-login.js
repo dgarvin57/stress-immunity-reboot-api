@@ -31,10 +31,21 @@ exports.login = async (userid, password) => {
   // Authenticated
   // Generate refresh JWT
 
-  const refreshJwt = generateRefreshToken({ userId: userRecId })
-  console.log(refreshJwt)
+  const expiryDate = new Date(
+    new Date().setHours(
+      new Date().getHours() + config.refreshTokenExpiresInHours
+    )
+  )
 
-  return { status: 200, message: `User ${userid} authenticated` }
+  const refreshJwt = generateRefreshToken({ userId: userRecId })
+  // console.log(refreshJwt)
+
+  return {
+    status: 200,
+    message: `User ${userid} authenticated`,
+    token: refreshJwt,
+    expiration: expiryDate,
+  }
 }
 
 exports.encryptPasswordMultiple = async (password, passes) => {
@@ -61,9 +72,11 @@ exports.comparePassword = async (password1, password2) => {
  */
 exports.authenticateToken = async (req, res, next) => {
   try {
+    // http only cookie (refresh)
+    const refreshToken = req.headers.cookie
     // const authHeader = req.headers['authorization']
     // const token = authHeader && authHeader.split(' ')[1]
-    // if (!token) return res.status(401).send('Access token missing')
+    if (!refreshToken) return res.status(401).send("Token missing")
     // // Valid token: Check against blacklist in case user logged out
     // // Instantiate BaseController for the token blacklist object
     // const objBase = new BaseController(
@@ -79,16 +92,17 @@ exports.authenticateToken = async (req, res, next) => {
     //   // Token is blacklisted, meaning user has logged out, invalidate
     //   return res.status(401).send('Access token logged out')
     // }
-    // // Not logged out: Verify
-    // jwt.verify(token, config.accessTokenSecret, (err, user) => {
-    //   if (err) return res.status(401).send('Access token expired')
-    //   // *****************************
-    //   // Verified token
-    //   req.user = user
-    next()
-    // })
+    // Refresh token not black-listed: Now verify token
+    const token = refreshToken.split("token=")[1]
+    jwt.verify(token, config.refreshTokenSecret, (err, user) => {
+      if (err) return res.status(401).send({ error: err.message }) //"Access token expired")
+      // *****************************
+      // Verified token
+      req.user = user
+      next()
+    })
   } catch (err) {
-    return res.status(401).send(`Unknown access token error: ${err}`)
+    return res.status(401).send(`Unknown token error: ${err}`)
   }
 }
 function generateAccessToken(user) {
@@ -100,9 +114,10 @@ function generateAccessToken(user) {
 
 function generateRefreshToken(user) {
   // Create json web token to return to user to be used for future authentication
-  return jwt.sign(user, config.refreshTokenSecret, {
+  const token = jwt.sign(user, config.refreshTokenSecret, {
     expiresIn: `${config.refreshTokenExpiresInHours}h`,
   })
+  return token
 }
 
 exports.pruneExpiredTokens = async function () {

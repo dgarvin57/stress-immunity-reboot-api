@@ -229,33 +229,43 @@ async function update({ ...props }) {
   if (conversion.changedFields.length === 0) {
     return { message: "Nothing to update" }
   }
-
   // See if record exists for this unique key
   const error = await checkIfUniqueKeyExists({ ...props, currRecId })
   if (error) {
     return error
   }
-
   const sql = mysql.format(
     `UPDATE ${dbName}.${tableName} SET ${conversion.changedFields} WHERE id = ${currRecId}`,
     conversion.changedValues
   )
-  // Update record
-  await db.query(sql)
-  // Log changes
-  helper.logChanges(
-    "Update",
-    dbName,
-    tableName,
-    conversion.changedJson,
-    currRecord.data[0]
-  )
-  // Get updated record and return
-  return getOneById({
-    dbName: dbName,
-    tableName: tableName,
-    idValue: currRecId,
-  })
+  try {
+    // Update record
+    await db.query(sql)
+    // Log changes
+    helper.logChanges(
+      "Update",
+      dbName,
+      tableName,
+      conversion.changedJson,
+      currRecord.data[0]
+    )
+    // Get updated record and return
+    return getOneById({
+      dbName: dbName,
+      tableName: tableName,
+      idValue: currRecId,
+    })
+  } catch (err) {
+    // Custom error message for duplicate entry
+    if (err.message.toLowerCase().includes("duplicate entry")) {
+      let newMessage = err.message.split("for key")[0].trim()
+      newMessage = newMessage.replace("Duplicate entry", recordType)
+      newMessage = `${newMessage} already exists and so cannot be updated`
+      return { error: newMessage }
+    } else {
+      return { error: err.message }
+    }
+  }
 }
 
 // See if record with key field exists
@@ -264,6 +274,9 @@ async function checkIfUniqueKeyExists({ ...props }) {
 
   // Find key field from schema
   const keyField = await helper.getSchemaKeyField(dbName, tableName)
+  if (keyField === -1) {
+    return null
+  }
   // Convert to camel case and find field and its value of req data
   const keyFieldCamel = helper.toCamelCase(keyField)
   const reqValue = reqBody[keyFieldCamel]

@@ -17,6 +17,12 @@ router.post("/", async function (req, res, next) {
     if (result.status === 401) {
       res.status(401).send({ message: result.message })
     } else {
+      res.cookie("token", result.token, {
+        expires: result.expiration, // time until expiration
+        secure: false, // set to true if your using https
+        httpOnly: true,
+      })
+
       res.status(200).send({ message: result.message })
     }
   } catch (err) {

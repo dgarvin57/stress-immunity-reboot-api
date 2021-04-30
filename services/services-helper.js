@@ -294,6 +294,10 @@ async function getSchemaKeyField(dbName, tableName) {
   // If no schema, get it
   table_schema = await getSchema(dbName, tableName)
   const keyField = table_schema.filter(x => x.key === "UNI")
+  if (Array.isArray(keyField) && keyField.length > 1) {
+    // More than one unique key; don't attempt
+    return -1
+  }
   if (keyField) {
     return keyField[0].field
   } else {
