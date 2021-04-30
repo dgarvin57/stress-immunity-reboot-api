@@ -48,7 +48,7 @@ const validate = [
 ]
 
 /* GET all users. */
-router.get("/", async (req, res, next) => {
+router.get("/", authenticateToken, async (req, res, next) => {
   try {
     const records = await baseService.getAll({
       dbName: "auth",
