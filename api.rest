@@ -1,8 +1,10 @@
+@domain=http://localhost:3000
+//@domain=https://stress-immunity-reboot-api.herokuapp.com
 ###
 // *************************** LOGIN and TOKENS *******************
 // Login with dg1095 password encrypted 1 time
 # @name login
-POST http://localhost:3000/login
+POST {{domain}}/login
 Content-Type: application/json
 
 {
@@ -13,7 +15,7 @@ Content-Type: application/json
 ###
 // Encrypt a password
 # @name login
-POST http://localhost:3000/login/encrypt-password?passes=1
+POST {{domain}}/login/encrypt-password?passes=1
 Content-Type: application/json
 {
     "username": "dgarvin57@gmail.com",
@@ -22,36 +24,42 @@ Content-Type: application/json
 
 ###
 // *************************** USERS *******************
-// Get all users with page limits -- DONE --
-GET http://localhost:3000/user?listPerPage=100&page=1
+// Get all users with page limits
+GET {{domain}}/user?listPerPage=10&page=2
 
 ###
-// Get all users with order and direction
-GET http://localhost:3000/user/?orderBy=organizationName&orderDir=ASC
+// Get all users with ORDER and DIRECTION
+GET {{domain}}/user/?orderBy=userId&orderDir=ASC
 //Authorization: Bearer {{accessToken}}
 
 ###
-// Find users by page search text
-GET http://localhost:3000/user/find?searchText=gmail
+// Find users by SEARCH TEXT
+GET {{domain}}/user/find?searchText=@mac
 //Authorization: Bearer {{accessToken}}
 
 ###
-// Find users by field filters
-GET http://localhost:3000/user/find?filter=active=true
+// Find users by FIELD FILTERS (and optionally combine with search text
+GET {{domain}}/user/find?searchText=dan
+Content-Type: application/json
+
+{
+    "organizationName": ["LIKE", "success"],
+    "userId": ["LIKE", "@gm"],
+    "active": ["=", "1"]
+}
+
+###
+// Get one user by id
+GET {{domain}}/user/3
+
+###
+// Delete one user by id
+DELETE {{domain}}/user/162
 //Authorization: Bearer {{accessToken}}
 
 ###
-// Get one user by id -- DONE --
-GET http://localhost:3000/user/3
-
-###
-// Delete one user by id -- DONE --
-DELETE http://localhost:3000/user/101
-//Authorization: Bearer {{accessToken}}
-
-###
-// Create user -- DONE --
-POST http://localhost:3000/user
+// Create user
+POST {{domain}}/user
 Content-Type: application/json
 
 {
@@ -65,16 +73,16 @@ Content-Type: application/json
 }
 
 ###
-// Update user -- DONE --
-PUT http://localhost:3000/user/98
+// Update user
+PUT {{domain}}/user/163
 Content-Type: application/json
 
 {
-    "userId": "tonyblack@successinc.com",
+    "userId": "briangreen@successinc.com",
     "password": "password1234",
-    "firstName": "Anthony",
+    "firstName": "Brian",
     "lastName": "Green",
-    "phoneNumber": "202-333-4444",
+    "phoneNumber": "202-333-5345",
     "organizationName": "Success, Inc.",
-    "dateEnrolled": "2021-04-26"
+    "dateEnrolled": "2021-04-24 00:00:00"
 }

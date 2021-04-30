@@ -5,6 +5,14 @@ const baseRouter = require("./base-router")
 const { authenticateToken } = require("../services/auth-login")
 const { body, check, validationResult } = require("express-validator")
 
+// Fields to search on for searchText find (use database snake case)
+const searchFields = [
+  "user_id",
+  "first_name",
+  "last_name",
+  "phone_number",
+  "organization_name",
+]
 const validate = [
   body("phoneNumber", `Phone number is required`)
     .exists()
@@ -45,8 +53,7 @@ router.get("/", async (req, res, next) => {
     const records = await baseService.getAll({
       dbName: "auth",
       tableName: "users",
-      page: req.query.page,
-      listPerPage: req.query.listPerPage,
+      req: req,
     })
     // Remove passwords
     res.json(baseRouter.removeField(records, "password"))
@@ -56,13 +63,15 @@ router.get("/", async (req, res, next) => {
   }
 })
 
-// Get one user record by id
-router.get("/:id", async (req, res, next) => {
+// Find users record by searchText filter
+router.get("/find", async (req, res, next) => {
   try {
-    const results = await baseService.getOneById({
+    const results = await baseService.getAll({
       dbName: "auth",
       tableName: "users",
-      idValue: req.params.id,
+      find: true,
+      req: req,
+      searchFields,
     })
     baseRouter.handleResponse("User", results, req, res, false, "password")
   } catch (e) {
@@ -70,8 +79,8 @@ router.get("/:id", async (req, res, next) => {
   }
 })
 
-// Find users record by searchText filter
-router.get("/find", async (req, res, next) => {
+// Get one user record by id
+router.get("/:id", async (req, res, next) => {
   try {
     const results = await baseService.getOneById({
       dbName: "auth",
@@ -119,12 +128,15 @@ router.post("/", authenticateToken, validate, async (req, res, next) => {
 router.put("/:id", authenticateToken, validate, async (req, res, next) => {
   try {
     const results = await baseService.update({
+      recordType: "User",
       dbName: "auth",
       tableName: "users",
       reqBody: req.body,
       reqParams: req.params,
     })
-    res.json(results)
+    //res.json(results)
+    baseRouter.handleResponse("User", results, req, res, false, "password")
+    //    res.json(baseRouter.removeField(results, "password"))
   } catch (e) {
     next(e)
     throw e

@@ -9,12 +9,12 @@ function handleResponse(
   if (results === -1) {
     // Doesn't exist
     res.status(404).send({
-      message: `${recordType} record id ${req.params.id} not found`,
+      error: `${recordType} record id ${req.params.id} not found`,
     })
   } else if (results === -2) {
     // Already deleted
     res.status(200).send({
-      message: `${recordType} record id ${req.params.id} ${
+      error: `${recordType} record id ${req.params.id} ${
         deleteVerbage
           ? "has already been deleted"
           : "exists but has been deleted"
@@ -22,7 +22,6 @@ function handleResponse(
     })
   } else {
     if (removeFieldName) {
-      //      console.log("handlResponse:", results)
       res.json(removeField(results, removeFieldName))
     } else {
       res.json(results)
@@ -31,6 +30,10 @@ function handleResponse(
 }
 
 function removeField(records, field) {
+  if (!Array.isArray(records.data)) {
+    return records
+  }
+
   const cleanRecords = records.data.map(record => {
     const cleanRecord = {}
     for (var key of Object.keys(record)) {

@@ -8,6 +8,7 @@ const authLoginRouter = require("./routes/auth-login.route")
 // *********************************************
 // Change log
 // 04/23/21: v0.0 - Initial commit
+// 04/29/21: v0.1 - Done with CRUD
 // *********************************************
 
 app.use(bodyParser.json())
