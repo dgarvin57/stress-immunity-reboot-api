@@ -20,7 +20,7 @@ app.use(
 
 // Routes
 app.use("/user", authUserRouter)
-app.use("/login", authLoginRouter)
+app.use("/test4", authLoginRouter)
 
 const currDate = new Date()
 const port = process.env.PORT !== undefined ? process.env.PORT : 3000

@@ -70,7 +70,7 @@ exports.comparePassword = async (password1, password2) => {
  * Authenticate access token passed in from client. Any failure to
  * validate token should result in 401 HTTP code, "Not authorized".
  */
-exports.authenticateToken = async (req, res, next) => {
+exports.authenticateToken = async (req, res, next) => { 
   try {
     // http only cookie (refresh)
     const refreshToken = req.headers.cookie
