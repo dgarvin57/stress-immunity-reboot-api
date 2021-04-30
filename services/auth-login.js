@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt")
 const baseService = require("./base-service")
+const jwt = require("jsonwebtoken")
+const config = require("../config")
 
 /***
  * Password is expected to be plain text. This is only ok if using HTTPS
@@ -19,6 +21,7 @@ exports.login = async (userid, password) => {
     return { status: 401, message: "User record has been deleted" }
   }
   // Userid is matched...Check password
+  const userRecId = userRec.data[0].userId
   const userRecPass = userRec.data[0].password
   const passCompare = await this.comparePassword(password, userRecPass)
   if (!passCompare) {
@@ -26,6 +29,11 @@ exports.login = async (userid, password) => {
     return { status: 401, message: "Invalid user id or password" }
   }
   // Authenticated
+  // Generate refresh JWT
+
+  const refreshJwt = generateRefreshToken({ userId: userRecId })
+  console.log(refreshJwt)
+
   return { status: 200, message: `User ${userid} authenticated` }
 }
 
@@ -82,4 +90,29 @@ exports.authenticateToken = async (req, res, next) => {
   } catch (err) {
     return res.status(401).send(`Unknown access token error: ${err}`)
   }
+}
+function generateAccessToken(user) {
+  // Create json web token to return to user to be used for future authentication
+  return jwt.sign(user, config.accessTokenSecret, {
+    expiresIn: `${config.accessTokenExpiresInMinutes}m`,
+  })
+}
+
+function generateRefreshToken(user) {
+  // Create json web token to return to user to be used for future authentication
+  return jwt.sign(user, config.refreshTokenSecret, {
+    expiresIn: `${config.refreshTokenExpiresInHours}h`,
+  })
+}
+
+exports.pruneExpiredTokens = async function () {
+  //await app.runMiddleware('/tokens/pruneZzi39', function (code, body, headers) {
+  //  console.log(`${new Date()} - ${body}`);
+  //})
+  // Create request and response object to simulate an actual request/response
+  const req = { query: {}, params: {} }
+  const res = {}
+  const authToken = new AuthToken(req, res)
+  const result = await authToken.pruneExpiredTokens()
+  console.log(`${new Date()} - ${result}`)
 }

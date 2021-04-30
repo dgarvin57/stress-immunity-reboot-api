@@ -4,13 +4,13 @@ const helper = require("./services-helper")
 
 // Get ONE record with matching id field
 async function getOneById({ ...props }) {
-  const { dbName, tableName, idValue } = props
+  const { dbName, tableName, idValue, toCamelCase = true } = props
   const sql = mysql.format(
     `SELECT * FROM ${dbName}.${tableName} WHERE id = ?`,
     idValue
   )
   const rows = await db.query(sql)
-  const data = helper.emptyOrRows(rows)
+  const data = helper.emptyOrRows(rows, toCamelCase)
   // meta
   meta = { totalCount: 1, maxPages: 1, page: 1 }
 
@@ -24,13 +24,29 @@ async function getOneById({ ...props }) {
 
 // Get ONE record with matching key (unique) field
 async function getOneByKeyField({ ...props }) {
-  const { dbName, tableName, fieldName, fieldValue } = props
-  const sql = mysql.format(
-    `SELECT * FROM ${dbName}.${tableName} WHERE ${fieldName} = ?`,
-    fieldValue
-  )
+  const {
+    dbName,
+    tableName,
+    fieldName,
+    fieldValue,
+    toCamelCase = true,
+    omitId,
+  } = props
+  let sql = ""
+  if (omitId) {
+    // Omit passed in record id (usually itself)
+    sql = mysql.format(
+      `SELECT * FROM ${dbName}.${tableName} WHERE ${fieldName} = ? AND id <> ?`,
+      [fieldValue, omitId]
+    )
+  } else {
+    sql = mysql.format(
+      `SELECT * FROM ${dbName}.${tableName} WHERE ${fieldName} = ?`,
+      fieldValue
+    )
+  }
   const rows = await db.query(sql)
-  const data = helper.emptyOrRows(rows)
+  const data = helper.emptyOrRows(rows, toCamelCase)
   // meta
   meta = { totalCount: 1, maxPages: 1, page: 1 }
 
@@ -48,7 +64,7 @@ async function getOneByKeyField({ ...props }) {
 // Get SOME or ALL records for given props
 // Handles list per page (limit), page number (offset), order by and direction,
 // search text, and filter by field
-async function getSome({ ...props }) {
+async function getSomeOrAll({ ...props }) {
   const { dbName, tableName, find, req, searchFields } = props
 
   // Use this same method to also handle searchText and filters
@@ -127,7 +143,7 @@ async function deleteOneById({ ...props }) {
   // Log changes (no need to record changes)
   await helper.logChanges("Delete", dbName, tableName, "", rec.data[0])
 
-  if (data && data.affectedRows && data.affectedRows > 0) {
+  if (data && data[0] && data[0].affectedrows > 0) {
     return {
       message: `${recordType} record id ${idValue} successfully deleted`,
     }
@@ -192,11 +208,16 @@ async function create({ ...props }) {
 async function update({ ...props }) {
   const { recordType, dbName, tableName, reqBody, reqParams } = props
   const currRecId = reqParams.id
-  const currRecord = await getOneById({ ...props, idValue: currRecId })
+  const currRecord = await getOneById({
+    ...props,
+    idValue: currRecId,
+    toCamelCase: false,
+  })
   if (currRecord === -1) {
     // Record not found
     return -1
   }
+
   // Compare passed in record with database version
   const conversion = await helper.parseBody(
     "UPDATE",
@@ -208,6 +229,13 @@ async function update({ ...props }) {
   if (conversion.changedFields.length === 0) {
     return { message: "Nothing to update" }
   }
+
+  // See if record exists for this unique key
+  const error = await checkIfUniqueKeyExists({ ...props, currRecId })
+  if (error) {
+    return error
+  }
+
   const sql = mysql.format(
     `UPDATE ${dbName}.${tableName} SET ${conversion.changedFields} WHERE id = ${currRecId}`,
     conversion.changedValues
@@ -230,6 +258,33 @@ async function update({ ...props }) {
   })
 }
 
+// See if record with key field exists
+async function checkIfUniqueKeyExists({ ...props }) {
+  const { recordType, dbName, tableName, reqBody, currRecId } = props
+
+  // Find key field from schema
+  const keyField = await helper.getSchemaKeyField(dbName, tableName)
+  // Convert to camel case and find field and its value of req data
+  const keyFieldCamel = helper.toCamelCase(keyField)
+  const reqValue = reqBody[keyFieldCamel]
+  // Use that db key field and req value to search database by key field
+  const rec = await getOneByKeyField({
+    dbName,
+    tableName,
+    fieldName: keyField,
+    fieldValue: reqValue,
+    omitId: currRecId,
+  })
+  if (rec === -1) {
+    // Doesn't exists
+    return null
+  }
+  // Exists: Tell user and stop
+  return {
+    error: `${recordType} already exists for ${keyFieldCamel} ${reqValue}`,
+  }
+}
+
 // See if record id exists
 async function checkIfExists({ props }) {
   const rec = await getOneById(props)
@@ -242,7 +297,7 @@ async function checkIfExists({ props }) {
 
 module.exports = {
   getOneByKeyField,
-  getAll: getSome,
+  getAll: getSomeOrAll,
   getOneById,
   deleteOneById,
   create,

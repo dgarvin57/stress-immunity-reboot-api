@@ -5,11 +5,36 @@ const utils = require("../utils")
 
 let table_schema = {}
 
-function emptyOrRows(rows) {
+// camelCase: convert from snake to camel case?
+function emptyOrRows(rows, camelCase = true) {
   if (!rows) {
     return []
   }
-  return rows
+  const objRows = Object.values(JSON.parse(JSON.stringify(rows)))
+  // Convert properties from snake to camel
+  rows = Array.isArray(rows) ? rows : [rows]
+  const newRows = []
+  rows.forEach(row => {
+    const newRec = {}
+    Object.keys(row).forEach(prop => {
+      const newProp = camelCase ? toCamelCase(prop) : prop
+      newRec[newProp] = row[prop]
+    })
+    newRows.push(newRec)
+  })
+  return newRows
+}
+
+// Given a field name string in snake, convert to camel
+// Go from user_id to userId, by removing and converting the next letter to uppercase
+function toCamelCase(value) {
+  const snakeToCamel = value
+    .toLowerCase()
+    .replace(/([-_][a-z])/g, group =>
+      group.toUpperCase().replace("-", "").replace("_", "")
+    )
+
+  return snakeToCamel
 }
 
 // Convert field name as comes from the front end request (camel or pascal)
@@ -101,13 +126,19 @@ async function logChanges(action, dbName, tableName, changes, record) {
   // Get key name
   const keyName = await getSchemaKeyField(dbName, tableName)
   if (utils.isObjectEmpty(objChanges)) {
-    objChanges[keyName] = record[keyName]
+    objChanges[keyName] = record[keyName] || record[toCamelCase(keyName)]
   }
   objChanges = { ...objChanges, ...changes }
 
   const sql = mysql.format(
     `INSERT INTO ${dbName}.${dbName}_log (table_name, action, record_id, key_name, changes) VALUES(?, ?, ?, ?, ?)`,
-    [tableName, action, record.id, record[keyName], JSON.stringify(objChanges)]
+    [
+      tableName,
+      action,
+      record.id,
+      record[keyName] || record[toCamelCase(keyName)],
+      JSON.stringify(objChanges),
+    ]
   )
   // Create record
   await db.query(sql)
@@ -158,7 +189,16 @@ async function parseBody(method, dbName, tableName, reqBody, currRecord = {}) {
 function isChanged(reqValue, dbField, dbValue) {
   // Find key in passed in and database records
   if (reqValue && dbValue) {
-    if (getSchemaType(dbField).includes("date")) {
+    if (getSchemaType(dbField) === "date") {
+      // Compare dates
+      const reqValueParse = Date.parse(
+        new Date(reqValue).toISOString().substr(0, 10)
+      )
+      const dbValueParse = Date.parse(dbValue.toISOString().substr(0, 10))
+      if (reqValueParse !== dbValueParse) {
+        return true
+      }
+    } else if (getSchemaType(dbField).includes("date")) {
       // Compare dates
       const reqValueParse = Date.parse(new Date(reqValue).toISOString())
       const dbValueParse = Date.parse(dbValue.toISOString())
@@ -237,9 +277,9 @@ async function getSchema(dbName, tableName) {
 
 // Return schema db type for this field
 function getSchemaType(field) {
-  const found = table_schema.filter(item => item.Field === field)
+  const found = table_schema.filter(item => item.field === field)
   if (found) {
-    return found[0].Type
+    return found[0].type
   } else {
     return -1
   }
@@ -253,9 +293,9 @@ function getSchemaType(field) {
 async function getSchemaKeyField(dbName, tableName) {
   // If no schema, get it
   table_schema = await getSchema(dbName, tableName)
-  const keyField = table_schema.filter(x => x.Key === "UNI")
+  const keyField = table_schema.filter(x => x.key === "UNI")
   if (keyField) {
-    return keyField[0].Field
+    return keyField[0].field
   } else {
     // Get second field of schema
     const secondField = table_schema[1]
@@ -272,5 +312,6 @@ module.exports = {
   listControlParameters,
   logChanges,
   parseBody,
+  toCamelCase,
   toSnakeCase,
 }

@@ -50,11 +50,11 @@ Content-Type: application/json
 
 ###
 // Get one user by id
-GET {{domain}}/user/3
+GET {{domain}}/user/176
 
 ###
 // Delete one user by id
-DELETE {{domain}}/user/162
+DELETE {{domain}}/user/176
 //Authorization: Bearer {{accessToken}}
 
 ###
@@ -63,26 +63,26 @@ POST {{domain}}/user
 Content-Type: application/json
 
 {
-    "userId": "tonyblack@successinc.com",
-    "password": "password1234",
-    "firstName": "Tony",
-    "lastName": "Black",
-    "phoneNumber": "201-399-2222",
-    "organizationName": "Success, Inc.",
-    "dateEnrolled": "2021-04-25"
+    "userId": "bethevans@acme.com",
+    "password": "passwor3323ss334",
+    "firstName": "Beth",
+    "lastName": "Evans",
+    "phoneNumber": "232-999-8888",
+    "organizationName": "Acme Chemical",
+    "dateEnrolled": "2021-04-26"
 }
 
 ###
 // Update user
-PUT {{domain}}/user/163
+PUT {{domain}}/user/182
 Content-Type: application/json
 
 {
-    "userId": "briangreen@successinc.com",
-    "password": "password1234",
-    "firstName": "Brian",
-    "lastName": "Green",
-    "phoneNumber": "202-333-5345",
-    "organizationName": "Success, Inc.",
-    "dateEnrolled": "2021-04-24 00:00:00"
+    "userId": "bethevans@acme.com",
+    "password": "passwor3323ss334",
+    "firstName": "Beth",
+    "lastName": "Evans",
+    "phoneNumber": "232-999-8887",
+    "organizationName": "Acme Chemical",
+    "dateEnrolled": "2021-04-26"
 }
