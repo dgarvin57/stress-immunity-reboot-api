@@ -94,7 +94,7 @@ exports.authenticateToken = async (req, res, next) => {
     // }
 
     // Refresh token not black-listed: Now verify token
-    const token = refreshToken.split("token=")[0]
+    const token = refreshToken.split("token=")[1]
     jwt.verify(token, config.refreshTokenSecret, (err, user) => {
       if (err) return res.status(401).send({ error: err.message }) //"Access token expired")
       // *****************************
