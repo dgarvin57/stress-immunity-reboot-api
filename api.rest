@@ -1,5 +1,5 @@
-@domain=http://localhost:3000
-//@domain=https://stress-immunity-reboot-api.herokuapp.com
+//@domain=http://localhost:3000
+@domain=https://stress-immunity-reboot-api.herokuapp.com
 ###
 // *************************** LOGIN and TOKENS *******************
 // Login with dg1095 password encrypted 1 time
