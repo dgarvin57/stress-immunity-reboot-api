@@ -70,7 +70,7 @@ exports.comparePassword = async (password1, password2) => {
  * Authenticate access token passed in from client. Any failure to
  * validate token should result in 401 HTTP code, "Not authorized".
  */
-exports.authenticateToken = async (req, res, next) => { 
+exports.authenticateToken = async (req, res, next) => {
   try {
     // http only cookie (refresh)
     const refreshToken = req.headers.cookie
@@ -92,8 +92,9 @@ exports.authenticateToken = async (req, res, next) => {
     //   // Token is blacklisted, meaning user has logged out, invalidate
     //   return res.status(401).send('Access token logged out')
     // }
+
     // Refresh token not black-listed: Now verify token
-    const token = refreshToken.split("token=")[1]
+    const token = refreshToken.split("token=")[0]
     jwt.verify(token, config.refreshTokenSecret, (err, user) => {
       if (err) return res.status(401).send({ error: err.message }) //"Access token expired")
       // *****************************
